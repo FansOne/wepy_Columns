@@ -1,0 +1,355 @@
+<script>
+import wepy from 'wepy';
+
+const listData = require('../utils/listData.js');
+export default class test extends wepy.page {
+    config = {};
+    components = {};
+
+    data = {
+       typeData: [], // 列表数据
+       useData: [], // 过度数据
+       contentActive: '', // 内容栏id
+       navActive: 0, // 导航栏选中id
+       heightArr: [],
+       containerH: 0,
+       defaultImg: '../image/goods-img-default.png'
+    };
+    methods = {
+        // 左侧导航栏点击事件
+        chooseType(e) {
+            let id = e.currentTarget.dataset.id;
+            let index = e.currentTarget.dataset.index;
+            this.contentActive = id
+            this.navActive = index
+        },
+        onScroll(e) {
+            let scrollTop = e.detail.scrollTop;
+            let scrollArr = this.heightArr;
+            if (scrollTop >= scrollArr[scrollArr.length - 1] - this.containerH) {
+                return
+            } else {
+                for (let i = 0; i < scrollArr.length; i++) {
+                    if (scrollTop >= 0 && scrollTop < scrollArr[0]) {
+                        this.navActive = 0
+                        this.$apply()
+                    } else if (scrollTop >= scrollArr[i - 1] && scrollTop < scrollArr[i]) {
+                        this.navActive = i
+                        this.$apply()
+                    }
+                }
+            }
+        },
+    };
+
+    events = {};
+    onReady(){
+        let query = wx.createSelectorQuery();
+        let heightArr = [];
+        let s = 0;
+        query.selectAll('.pesticide').boundingClientRect((react) => {
+            react.forEach((res) => {
+                s += res.height;
+                heightArr.push(s)
+            });
+            this.heightArr = heightArr
+            this.$apply()
+        });
+        query.select('.content').boundingClientRect((res) => {
+            // 计算容器高度
+            this.containerH = res.height
+            this.$apply()
+        }).exec()
+    }
+    onLoad() {
+        this.typeData = listData.data
+        // 数据提取
+        this.dataSet(listData.data)
+    };
+    // 数据提取
+    dataSet(listData){
+        let useData = [];
+        listData.forEach((item, i) => {
+            item.goods_category_two.forEach((itemTwo, j) => {
+                    itemTwo.goods.length && itemTwo.goods.forEach((itemThr, k) => {
+                    itemThr.typeOneIndex = i;
+                    itemThr.typeTwoIndex = j;
+                    itemThr.goodsIndex = k;
+                    useData.push(itemThr);
+                })
+            })
+        })
+        this.useData = useData
+    }
+}
+</script>
+
+<template lang="wxml">
+    <view class="container">
+    <view class="main" wx:if="{{typeData.length}}">
+        <view class="container-linkpage">
+            <!-- 左 -->
+            <view class="nav">
+                <scroll-view scroll-y="true" style="height: 100%;" class="nav-scroll">
+                    <view wx:for="{{typeData}}" class="nav-item {{index === navActive ? 'active' : ''}}" wx:key="{{index}}"
+                        data-id="tty{{item.goods_category_one_id}}" data-index="{{index}}" @tap.stop="chooseType">{{item.goods_category_one_name}}
+                    </view>
+                </scroll-view>
+            </view>
+            <!-- 右 -->
+            <view class="content content-class">
+                <scroll-view scroll-y="true" style="height: 100%;" scroll-into-view="{{contentActive}}" scroll-with-animation="true" bindscroll="onScroll" class="content-scroll">
+                     <!-- 不同分类商品 -->
+                    <view class="pesticide" id="tty{{item.goods_category_one_id}}" wx:for="{{typeData}}" wx:for-index="typeOneIndex" wx:key="{{typeOneIndex}}">
+
+                        <view wx:if="{{twoItem.goods.length}}" wx:for="{{item.goods_category_two}}" wx:for-item="twoItem" wx:for-index="typeTwoIndex" wx:key="{{typeTwoIndex}}">
+                            <!-- 商品说明（类名） -->
+                            <view class="type-name">
+                                <view class="line"></view>
+                                <view class="name">{{twoItem.goods_category_two_name}}</view>
+                                <view class="line"></view>
+                            </view>
+                            <view class="pesticide-container">
+                                <!-- 商品Item -->
+                                <view class="pesticide-item goods-class" wx:for="{{twoItem.goods}}" data-itemId="{{pes.goods_id}}" wx:for-item="pes" wx:key="{{goodsIndex}}"
+                                    catchtap="tapHandle" wx:for-index="goodsIndex">
+                                    <image src="{{pes.url || defaultImg}}" mode="aspectFit"></image>
+                                    <view class="pesticide-item-content {{management ? 'management-item-content' : ''}}">
+                                        <view class="describe">
+                                            <text>{{pes.goods_name}}</text>
+                                        </view>
+                                        <view class="inventory">
+                                            <text>库存 {{pes.stock}} {{pes.base_unit_name}}</text>
+                                        </view>
+                                        <view class="price">
+                                            <text>￥100.00</text>                 
+                                        </view>
+                                        <view class="stepper" wx:if="{{!management}}">
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>   
+                        </view>
+                    </view>
+                    <view class="has-no-more" wx:if="{{typeData.length}}">
+                        <view class="line"></view>
+                        <view class="name">没有更多</view>
+                        <view class="line"></view>
+                    </view>
+                </scroll-view>
+            </view>
+        </view>
+    </view>
+  </view>
+</template>
+
+<style lang="less">
+    page {
+        overflow: hidden;
+        position: relative;
+        height: 100%;
+    }
+
+    .container {
+        color: #333;
+        height: 100%;
+    }
+
+    .main {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        overflow: hidden;
+    }
+
+    .shopping-basket {
+        width: 100%;
+        height: 100rpx;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+
+    .kaidan-height {
+        padding: 72rpx 0;
+    }
+
+    .has-no-goods {
+        text-align: center;
+        margin-top: 300rpx;
+        color: #999;
+    }
+
+    .has-no-goods text {
+        display: block;
+        margin-bottom: 60rpx;
+    }
+
+    .has-no-goods .has-no-goods-btn {
+        width: 670rpx;
+        border: none;
+        position: absolute;
+        left: 40rpx;
+        bottom: 20rpx;
+    }
+    .ball {
+        width: 40rpx;
+        height: 40rpx;
+        border-radius: 50%;
+        background: #FF8200;
+        position: absolute;
+        /* left: 40rpx; */
+    }
+
+    .container-linkpage {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    display: flex;
+    overflow: scroll;
+    color: #3a3a3a;
+}
+
+.container-linkpage .nav {
+    width: 180rpx;
+    background: #F2F2F2;
+    height: 100%;
+}
+.container-linkpage .nav .nav-scroll{
+    overflow: scroll;
+}
+
+.container-linkpage .nav .nav-item {
+    text-align: center;
+    width: 100%;
+    display: block;
+    /*min-height: 100rpx;*/
+    /*line-height: 100rpx;*/
+    color: #313131;
+    padding: 32rpx 0;
+    font-size: 32rpx;
+}
+
+.container-linkpage .nav .active {
+    background: #ffffff;
+}
+
+.container-linkpage .content {
+    flex: 1;
+    background: #fff;
+    height: 100%;
+}
+.container-linkpage .content .content-scroll{
+    overflow: hidden;
+}
+
+.container-linkpage .pesticide .type-name {
+    display: flex;
+    justify-content: center;
+    height: 72rpx;
+    align-items: center;
+}
+
+.container-linkpage .pesticide .type-name .line {
+    width: 40rpx;
+    height: 2rpx;
+    border-bottom: solid 1rpx #ddd;
+}
+
+.container-linkpage .pesticide .type-name .name {
+    margin: 0 16rpx;
+}
+
+.pesticide .pesticide-item {
+    height: 172rpx;
+    padding: 24rpx 0;
+    margin-left: 24rpx;
+    padding-right: 24rpx;
+    display: flex;
+    align-items: center;
+    /*border-bottom: solid 1px #dddddd;*/
+    position: relative;
+    color: #333333;
+}
+
+.pesticide .pesticide-item image {
+    width: 136rpx;
+    height: 136rpx;
+    margin-right: 24rpx;
+}
+
+.pesticide .pesticide-item .pesticide-item-content {
+    flex: 1;
+    position: relative;
+}
+.pesticide .pesticide-item .management-item-content{
+  min-height: 136rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.pesticide .pesticide-item .describe {
+    overflow: hidden;
+    text-align: left;
+    word-break: break-all;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 28rpx;
+}
+
+.pesticide .pesticide-item .inventory {
+    font-size: 24rpx;
+    color: #999;
+    margin-top: 8rpx;
+    display: inline;
+}
+
+.pesticide .pesticide-item .price {
+    color: #FF8200;
+    margin-top: 16rpx;
+  font-size: 28rpx;
+}
+.pesticide .pesticide-item .price .init{
+  margin-left: 8rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.pesticide .pesticide-item .amount {
+    font-size: 24rpx;
+    color: #999;
+}
+
+.pesticide .pesticide-item .stepper {
+    position: absolute;
+    width: 170rpx;
+    height: 50rpx;
+    right: 30rpx;
+    bottom: 0;
+}
+.content .has-no-more {
+  display: flex;
+  justify-content: center;
+  padding: 30rpx 0;
+  color: #ccc;
+  align-items: center;
+}
+
+.content .has-no-more .line {
+  width: 40rpx;
+  height: 2rpx;
+  border-bottom: solid 1rpx #ddd;
+}
+
+.content .has-no-more .name {
+  margin: 0 16rpx;
+}
+</style>

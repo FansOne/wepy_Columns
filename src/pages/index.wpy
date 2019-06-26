@@ -1,0 +1,123 @@
+<script>
+import wepy from 'wepy';
+import Loadings from "wepy-com-loadings";
+
+export default class index extends wepy.page {
+    config = {
+        usingComponents: {
+            'wxc-toast': '../../packages/@minui/wxc-toast/dist/index',
+            'wxc-loadmore': '../../packages/@minui/wxc-loadmore/dist/index',
+            'wxc-abnor': '../../packages/@minui/wxc-abnor/dist/index',
+            'wxc-loading': '../../packages/@minui/wxc-loading/dist/index',
+            'wxc-tab': '../../packages/@minui/wxc-tab/dist/index',
+            'wxc-tab-panel': '../../packages/@minui/wxc-tab/dist/panel',
+            'wxc-tab-label': '../../packages/@minui/wxc-tab/dist/label'
+        },
+    };
+    components = {
+        Loadings1:Loadings,
+        Loadings2:Loadings,
+        Loadings3:Loadings,
+        Loadings4:Loadings,
+        Loadings5:Loadings,
+        Loadings6:Loadings,
+        Loadings7:Loadings,
+        Loadings8:Loadings,
+        Loadings9:Loadings
+    };
+
+    data = {
+        loading: {
+            isShow: false
+        },
+        tabs: [
+            {title: '选项一', content: '内容一'},
+            {title: '选项二', content: '内容二'},
+            {title: '选项三', content: '内容三'},
+            {title: '选项四', content: '内容四'},
+            {title: '选项五', content: '内容五'},
+            {title: '选项六', content: '内容六'}
+        ]
+    };
+    methods = {
+        showToast() {
+            let $toast = this.$wxpage.selectComponent('.J_toast')
+            $toast && $toast.show()
+        },
+        onAbnorTap() {
+            wx.showToast({
+                title: 'success',
+                duration: 2000
+            });
+        },
+        showLoading() {
+            this.loading.isShow = true
+            setTimeout(() => {
+                this.loading.isShow = false
+            }, 1000)
+        },
+        onClick: (e)=> {
+            console.log(`ComponentId:${e.detail.componentId},you selected:${e.detail.key}`);
+        }
+    };
+
+    events = {};
+    onLoad() {};
+}
+</script>
+
+<template lang="wxml">
+    <!-- <view class="container">
+        <Loadings1 type="1"/>
+        <Loadings2 type="2"/>
+        <Loadings3 type="3"/>
+        <Loadings4 type="4"/>
+        <Loadings5 type="5"/>
+        <Loadings6 type="6"/>
+        <Loadings7 type="7"/>
+        <Loadings8 type="8"/>
+        <Loadings9 type="9"/>
+        <wxc-toast class="J_toast" text="Hello World"/>
+        <button bindtap="showToast">调用 show() 方法显示</button>
+        <wxc-loadmore
+            text="正在努力加载中..."
+            icon="https://s10.mogucdn.com/mlcdn/c45406/171018_8gj08gbl9fj6igb380dec9k1ifhe2_32x32.png"
+        />
+        <wxc-loadmore
+            is-end="{{true}}"
+            text="到底啦"
+            icon="https://s10.mogucdn.com/mlcdn/c45406/171016_47j96cl3hdhhdf7ajg8hg2kd13gdc_400x400.png"
+        />
+    </view> -->
+    <!-- REQUEST_ERROR, NOT_FOUND, DATA, FOLLOW, FEED,SHOP, WEIBO, SEARCH, TAG, MESSAGE, LIVE, ORDER, CART, FOOTPRINT, COUPON -->
+    <!-- <wxc-abnor
+    type="COUPON"
+    bind:abnortap="onAbnorTap"></wxc-abnor> -->
+    <!-- <wxc-loading
+    is-show="{{loading.isShow}}"
+    image="https://s10.mogucdn.com/mlcdn/c45406/170607_5241335cb37ka3ab7781ddh504ggh_200x200.png"
+    slip="http://s10.mogucdn.com/p1/160715/upload_ifrgmmzwmyydknldhezdambqmeyde_200x200.png"
+  ></wxc-loading>
+  <button bindtap="showLoading">自定义图片</button> -->
+  <wxc-tab
+    bind:tabchange="onClick"
+    default-index="{{2}}"
+    component-id="c2"
+    animate="{{true}}"
+  >
+    <wxc-tab-panel
+      wx:for="{{tabs}}"
+      wx:for-item="tab"
+      wx:key="{{tab.content}}"
+      tab-index="{{index}}"
+      component-id="c2"
+      label="{{tab.title}}"
+    >
+      {{tab.content}}
+    </wxc-tab-panel>
+
+  </wxc-tab>
+</template>
+
+<style lang="less">
+</style>
